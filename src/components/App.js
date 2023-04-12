@@ -9,7 +9,7 @@ import AddPlacePopup from './AddPlacePopup';
 import ImagePopup from './ImagePopup';
 import ConfirmDeleteCardPopup from './ConfirmDeleteCardPopup';
 import '../App.css';
-import api from '../utils/api';
+import api from "../utils/api.js";
 
 function App() {
 
