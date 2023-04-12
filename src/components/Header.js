@@ -1,10 +1,12 @@
-import Logo from '../images/logo.svg'
+import React from "react";
+import logoPath from '../images/mesto_logo.svg'
+
 function Header() {
-  return(
+  return (
     <header className="header">
-      <img src={Logo} alt="Логотип Место" className="header__logo" />
+      <img className="header__logo" src={logoPath} alt="Логотип Место" />
     </header>
-  )
+  );
 }
 
-export default Header
+export default Header;

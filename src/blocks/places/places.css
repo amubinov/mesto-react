@@ -1,16 +1,16 @@
 .places {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(282px, 1fr));
-  gap: 20px 17px;
-  margin: 0 auto 67px auto;
-  justify-items: center;
+  max-width: 880px;
+  margin: 51px auto 0;
 }
 
-
-@media screen and (max-width: 767px) {
+@media screen and (max-width: 918px) {
   .places {
-    max-width: 282px;
-    grid-template-columns: 1fr;
-    margin-bottom: 48px;
+    padding: 0 19px;
+  }
+}
+
+@media screen and (max-width: 539px) {
+  .places {
+    margin-top: 34px;
   }
 }

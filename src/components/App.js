@@ -1,145 +1,152 @@
-import Header from "./Header";
-import Main from "./Main";
-import Footer from "./Footer";
-import api from '../utils/api';
-import ImagePopup from "./ImagePopup";
+import React from 'react';
+import { CurrentUserContext } from '../context/CurrentUserContext';
+import Header from './Header';
+import Main from './Main';
+import Footer from './Footer';
 import EditProfilePopup from './EditProfilePopup';
-import EditAvatarPopup from "./EditAvatarPopup";
-import AddPlacePopup from "./AddPlacePopup";
-import ConfirmPopup from "./ConfirmPopup";
-import { useEffect, useState } from 'react';
-import { CurrentUserContext } from '../contexts/CurrentUserContext';
+import EditAvatarPopup from './EditAvatarPopup';
+import AddPlacePopup from './AddPlacePopup';
+import ImagePopup from './ImagePopup';
+import ConfirmDeleteCardPopup from './ConfirmDeleteCardPopup';
+import '../App.css';
+import api from '../utils/api';
 
 function App() {
-  const [ isEditProfilePopupOpen, setIsEditProfilePopupOpen ] = useState(false);
-  const [ isEditAvatarPopupOpen, setIsEditAvatarPopupOpen ] = useState(false);
-  const [ isAddPlacePopupOpen, setIsAddPlacePopupOpen ] = useState(false);
-  const [ currentUser, setCurrentUser ] = useState({});
-  const [ selectedCard, setSelectedCard ] = useState({});
-  const [ cards, setCards ] = useState([]);
-  const [ cardToDelete, setCardToDelete ] = useState(null);
-  const [isLoading, setIsLoading] = useState(false);
 
-  useEffect(() => {
-    Promise.all([ api.getUserInfo(), api.getInitialCards() ])
-      .then(res => {
-        const [ userInfo, cardsArray ] = res;
-        setCards(cardsArray);
-        setCurrentUser(userInfo);
+  const [currentUser, setCurrentUser] = React.useState({});
+  const [cards, setCards] = React.useState([]);
+  const [isEditProfilePopupOpen, setIsEditProfilePopupOpen] = React.useState(false);
+  const [isAddPlacePopupOpen, setIsAddPlacePopupOpen] = React.useState(false);
+  const [isEditAvatarPopupOpen, setIsEditAvatarPopupOpen] = React.useState(false);
+  const [isConfirmDeleteCardPopupOpen, setIsConfirmDeleteCardPopupOpen] = React.useState(false);
+  const [selectedCard, setSelectedCard] = React.useState({});
+  const [deleteCard, setDeleteCard] = React.useState({});
+
+  React.useEffect(() => {
+    Promise.all([api.getCurrentUser(), api.getCards()])
+      .then(([userData, cardsData]) => {
+        setCurrentUser(userData);
+        setCards(cardsData);
       })
-      .catch(err => console.log(err));
   }, [])
 
+  function handleEditProfileClick() {
+    setIsEditProfilePopupOpen(!isEditProfilePopupOpen);
+  }
+
+  function handleAddPlaceClick() {
+    setIsAddPlacePopupOpen(!isAddPlacePopupOpen);
+  }
+
+  function handleEditAvatarClick() {
+    setIsEditAvatarPopupOpen(!isEditAvatarPopupOpen);
+  }
+
+  function handleCardClick(card) {
+    setSelectedCard(card);
+  }
+
+  function handleConfirmDeleteCardClick(card) {
+    setIsConfirmDeleteCardPopupOpen(!isConfirmDeleteCardPopupOpen);
+    setDeleteCard(card);
+  }
+
   function closeAllPopups() {
-    setIsEditProfilePopupOpen(false)
-    setIsEditAvatarPopupOpen(false)
-    setIsAddPlacePopupOpen(false)
+    setIsEditProfilePopupOpen(false);
+    setIsAddPlacePopupOpen(false);
+    setIsEditAvatarPopupOpen(false);
+    setIsConfirmDeleteCardPopupOpen(false);
     setSelectedCard({});
-    setCardToDelete(null);
-  }
-
-  function handleUpdateAvatar(avatarData) {
-    setIsLoading(true);
-
-    api.updateAvatar(avatarData)
-      .then(userInfo => {
-        setCurrentUser(userInfo);
-        closeAllPopups();
-      })
-      .catch(err => console.log(err))
-      .finally(() => setIsLoading(false));
-  }
-
-  function handleUpdateUser(userInfo) {
-    setIsLoading(true);
-
-    api.setUserInfo(userInfo)
-      .then(data => {
-        setCurrentUser(data);
-        closeAllPopups();
-      })
-      .catch(err => console.log(err))
-      .finally(() => setIsLoading(false));
   }
 
   function handleCardLike(card) {
     const isLiked = card.likes.some(i => i._id === currentUser._id);
-    
-    api.changeLikeCardStatus(isLiked, card.id )
-    .then((newCard) => {
-        setCards((state) => state.map((c) => c._id === card.id ? newCard : c));
-    })
-    .catch(err => console.log(err));
+    api.changeLikeCardStatus(card._id, !isLiked).then((newCard) => {
+      setCards((state) => state.map((c) => c._id === card._id ? newCard : c));
+    });
   }
 
   function handleCardDelete(card) {
-    setCardToDelete(card.id);
-  }
-
-  function handleConfirmDelete() {
-    api.deleteCard(cardToDelete)
-    .then(() => {
-      setCards(cards.filter(c => c._id !== cardToDelete))
+    api.deleteCard(card._id).then(() => {
+      setCards((state) => state.filter((c) => c._id !== card._id));
       closeAllPopups();
     })
-    .catch(err => console.log(err));
-}
+  }
 
-  function handleAddPlaceSubmit(data) {
-    setIsLoading(true);
+  function handleUpdateUser(name, about) {
+    api.changeUserData(name, about).then(userData => {
+      setCurrentUser(userData);
+      closeAllPopups();
+    })
+  }
 
-    api.addNewCard(data)
-      .then(newCard => {
-        setCards([newCard, ...cards])
-        closeAllPopups();
-      })
-      .catch(err => console.log(err))
-      .finally(() => setIsLoading(false));
+  function handleUpdateAvatar(avatarLink) {
+    api.changeAvatar(avatarLink).then(userData => {
+      setCurrentUser(userData);
+      closeAllPopups();
+    })
+  }
+
+  function handleAddPlaceSubmit(name, link) {
+    api.addNewCard(name, link).then(cardData => {
+      setCards([cardData, ...cards]);
+      closeAllPopups();
+    })
+  }
+
+  const mainProps = {
+    onEditProfile: handleEditProfileClick,
+    onAddPlace: handleAddPlaceClick,
+    onEditAvatar: handleEditAvatarClick,
+    onCardClick: handleCardClick,
+    cards: cards,
+    onCardLike: handleCardLike,
+    onCardDelete: handleConfirmDeleteCardClick,
+  }
+
+  const imagePopupProps = {
+    card: selectedCard,
+    onClosePopup: closeAllPopups
+  }
+
+  const editProfilePopupProps = {
+    isOpen: isEditProfilePopupOpen,
+    onClose: closeAllPopups,
+    onUpdateUser: handleUpdateUser
+  }
+
+  const editAvatarPopupProps = {
+    isOpen: isEditAvatarPopupOpen,
+    onClose: closeAllPopups,
+    onUpdateAvatar: handleUpdateAvatar
+  }
+
+  const addPlacePopupProps = {
+    isOpen: isAddPlacePopupOpen,
+    onClose: closeAllPopups,
+    onAddPlace: handleAddPlaceSubmit
+  }
+
+  const confirmDeleteCardPopupProps = {
+    isOpen: isConfirmDeleteCardPopupOpen,
+    onClose: closeAllPopups,
+    onDeleteCard: handleCardDelete,
+    card: deleteCard
   }
 
   return (
-    <CurrentUserContext.Provider value={currentUser}>
-      <div className="App">
+    <div className="page">
+      <CurrentUserContext.Provider value={currentUser}>
         <Header />
-        <Main 
-          onEditProfile={setIsEditProfilePopupOpen}
-          onEditAvatar={setIsEditAvatarPopupOpen}
-          onAddPlace={setIsAddPlacePopupOpen}
-          cards={cards}
-          onCardLike={handleCardLike}
-          onCardClick={setSelectedCard}
-          onCardDelete={handleCardDelete}
-        />
+        <Main {...mainProps} />
         <Footer />
-        <ImagePopup 
-          card={selectedCard}
-          onClose={closeAllPopups}
-        />
-        <EditAvatarPopup
-          isOpen={isEditAvatarPopupOpen}
-          onClose={closeAllPopups}
-          onUpdateAvatar={handleUpdateAvatar}
-          onLoading={isLoading}
-        />
-        <EditProfilePopup
-          isOpen={isEditProfilePopupOpen}
-          onClose={closeAllPopups}
-          onUpdateUser={handleUpdateUser}
-          onLoading={isLoading}
-        />
-        <AddPlacePopup
-          isOpen={isAddPlacePopupOpen}
-          onClose={closeAllPopups}
-          onAddPlace={handleAddPlaceSubmit}
-          onLoading={isLoading}
-        />       
-        <ConfirmPopup
-          isOpen={!!cardToDelete}
-          onClose={closeAllPopups}
-          onConfirm={handleConfirmDelete}
-        />
-      </div>
-    </CurrentUserContext.Provider>
+        <EditProfilePopup {...editProfilePopupProps} />
+        <AddPlacePopup {...addPlacePopupProps} />
+        <EditAvatarPopup {...editAvatarPopupProps} />
+        <ConfirmDeleteCardPopup {...confirmDeleteCardPopupProps} />
+        <ImagePopup {...imagePopupProps} />
+      </CurrentUserContext.Provider>
+    </div>
   );
 }
 
