@@ -25,36 +25,40 @@ function App() {
   const [deleteCard, setDeleteCard] = useState({});
 
   useEffect(() => {
-    Promise.all([api.getCurrentUser(), api.getCards()])
-        .then(([userData, cardsData]) => {
-          setCurrentUser(userData);
-          setCards(cardsData);
-        })
-        .catch((error) => console.log(error));
+    const getCurrentUserAndCards = async () => {
+      try {
+        const [userData, cardsData] = await Promise.all([api.getCurrentUser(), api.getCards()]);
+        setCurrentUser(userData);
+        setCards(cardsData);
+      } catch (error) {
+        console.log(error);
+      }
+    };
+    getCurrentUserAndCards();
   }, []);
 
-  function handleEditProfileClick() {
+  const handleEditProfileClick = () => {
     setIsEditProfilePopupOpen(!isEditProfilePopupOpen);
   }
 
-  function handleAddPlaceClick() {
+  const handleAddPlaceClick = () => {
     setIsAddPlacePopupOpen(!isAddPlacePopupOpen);
   }
 
-  function handleEditAvatarClick() {
+  const handleEditAvatarClick = () => {
     setIsEditAvatarPopupOpen(!isEditAvatarPopupOpen);
   }
 
-  function handleCardClick(card) {
+  const handleCardClick = (card) => {
     setSelectedCard(card);
   }
 
-  function handleConfirmDeleteCardClick(card) {
+  const handleConfirmDeleteCardClick = (card) => {
     setIsConfirmDeleteCardPopupOpen(!isConfirmDeleteCardPopupOpen);
     setDeleteCard(card);
   }
 
-  function closeAllPopups() {
+  const closeAllPopups = () => {
     setIsEditProfilePopupOpen(false);
     setIsAddPlacePopupOpen(false);
     setIsEditAvatarPopupOpen(false);
@@ -62,49 +66,54 @@ function App() {
     setSelectedCard({});
   }
 
-  function handleCardLike(card) {
+  const handleCardLike = async (card) => {
     const isLiked = card.likes.some(i => i._id === currentUser._id);
-    api.changeLikeCardStatus(card._id, !isLiked)
-        .then((newCard) => {
-          setCards((state) => state.map((c) => c._id === card._id ? newCard : c));
-        })
-        .catch((error) => console.log(error));
+    try {
+      const newCard = await api.changeLikeCardStatus(card._id, !isLiked);
+      setCards((state) => state.map((c) => c._id === card._id ? newCard : c));
+    } catch (error) {
+      console.log(error);
+    }
   }
 
-  function handleCardDelete(card) {
-    api.deleteCard(card._id)
-        .then(() => {
-          setCards((state) => state.filter((c) => c._id !== card._id));
-          closeAllPopups();
-        })
-        .catch((error) => console.log(error));
+  const handleCardDelete = async (card) => {
+    try {
+      await api.deleteCard(card._id);
+      setCards((state) => state.filter((c) => c._id !== card._id));
+      closeAllPopups();
+    } catch (error) {
+      console.log(error);
+    }
   }
 
-  function handleUpdateUser(name, about) {
-    api.changeUserData(name, about)
-        .then(userData => {
-          setCurrentUser(userData);
-          closeAllPopups();
-        })
-        .catch((error) => console.log(error));
+  const handleUpdateUser = async (name, about) => {
+    try {
+      const userData = await api.changeUserData(name, about);
+      setCurrentUser(userData);
+      closeAllPopups();
+    } catch (error) {
+      console.log(error);
+    }
   }
 
-  function handleUpdateAvatar(avatarLink) {
-    api.changeAvatar(avatarLink)
-        .then(userData => {
-          setCurrentUser(userData);
-          closeAllPopups();
-        })
-        .catch((error) => console.log(error));
+  const handleUpdateAvatar = async (avatarLink) => {
+    try {
+      const userData = await api.changeAvatar(avatarLink);
+      setCurrentUser(userData);
+      closeAllPopups();
+    } catch (error) {
+      console.log(error);
+    }
   }
 
-  function handleAddPlaceSubmit(name, link) {
-    api.addNewCard(name, link)
-        .then(cardData => {
-          setCards([cardData, ...cards]);
-          closeAllPopups();
-        })
-        .catch((error) => console.log(error));
+  const handleAddPlaceSubmit = async (name, link) => {
+    try {
+      const cardData = await api.addNewCard(name, link);
+      setCards([cardData, ...cards]);
+      closeAllPopups();
+    } catch (error) {
+      console.log(error);
+    }
   }
 
   const mainProps = {
@@ -112,7 +121,7 @@ function App() {
     onAddPlace: handleAddPlaceClick,
     onEditAvatar: handleEditAvatarClick,
     onCardClick: handleCardClick,
-    cards: cards,
+    cards,
     onCardLike: handleCardLike,
     onCardDelete: handleConfirmDeleteCardClick,
   }
