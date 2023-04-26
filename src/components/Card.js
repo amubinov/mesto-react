@@ -1,25 +1,37 @@
-import React from "react";
-import { CurrentUserContext } from "../context/CurrentUserContext";
+import { useContext } from 'react';
+import { CurrentUserContext } from '../contexts/CurrentUserContext';
 
-function Card({ card, onCardClick, onCardLike, onCardDelete }) {
-
-  const currentUser = React.useContext(CurrentUserContext);
+function Card(card) {
+  const currentUser = useContext(CurrentUserContext);
   const isOwn = card.owner._id === currentUser._id;
   const isLiked = card.likes.some(i => i._id === currentUser._id);
+  const cardLikeButtonClassName = ( `place__like-button ${isLiked && 'place__like-button_active'}` );
 
-  return (
-    <li key={card._id} className="places__card">
-      <img onClick={() => onCardClick(card)} src={card.link} className="places__image" alt={card.name} />
-      {isOwn && <button onClick={() => onCardDelete(card)} type="button" className="places__button places__button_type_trash" aria-label="Кнопка удаления"></button>}
-      <div className="places__name">
-        <h2 className="places__title">{card.name}</h2>
-        <div className="places_likes">
-          <button type="button" onClick={() => onCardLike(card)} className={`places__button places__button_type_like ${isLiked && `active`}`} aria-label="Кнопка лайка"></button>
-          <p className={`places__counter ${card.likes.length > 0 && `places__counter_active`}`}>{card.likes.length}</p>
+  function handleCardClick() {
+    card.onCardClick(card);
+  }
+
+  function handleLikeClick() {
+    card.onCardLike(card);
+  }
+
+  function handleDeleteClick() {
+    card.onCardDelete(card)
+  }
+  
+  return(
+    <article className="place">
+      {isOwn && <button className="place__trash-button" type="button" onClick={handleDeleteClick} />}
+      <img className="place__image" alt={card.name} src={card.link} onClick={handleCardClick} />
+      <div className="place__info">
+        <h2 className="place__name">{card.name}</h2>
+        <div className="place__like-info">
+          <button className={cardLikeButtonClassName} type="button" onClick={handleLikeClick} />
+          <p className="place__like-counter">{card.likes.length}</p>
         </div>
       </div>
-    </li>
-  );
+    </article>
+  )
 }
 
 export default Card
